@@ -50,11 +50,11 @@ calc.plot_BS(efrom=-5, eto=5)
 
 and also plot 2D fermi surfaces
 
-<img src="pics/2D_band_plot.png" alt="2D_band_plot" width="200"/>
+<img src="pics/2D_band_plot.png" alt="2D_band_plot" width="400"/>
 
 and 3D fermi surfaces
 
-<img src="pics/3D_band_plot.png" alt="3D_band_plot" width="200"/>
+<img src="pics/3D_band_plot.png" alt="3D_band_plot" width="400"/>
 
 
 <!-- CONTACT -->
