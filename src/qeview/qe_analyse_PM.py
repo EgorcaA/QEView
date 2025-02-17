@@ -1,8 +1,6 @@
 from .qe_base import qe_analyse_base # Relative import
 
 import numpy as np
-import pandas as pd
-import numpy.linalg as LA
 from matplotlib.ticker import (MultipleLocator, FormatStrFormatter,
                                AutoMinorLocator)
 import matplotlib.pyplot as plt

@@ -1,7 +1,4 @@
 import numpy as np
-from matplotlib.ticker import (MultipleLocator, FormatStrFormatter,
-                               AutoMinorLocator)
-import matplotlib.pyplot as plt
 import warnings
 warnings.filterwarnings('ignore')
 from abc import ABC, abstractmethod
