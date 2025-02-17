@@ -48,8 +48,9 @@ calc.plot_BS(efrom=-5, eto=5)
 <img src="pics/interpolated_bs.png" alt="interpolated_bs" width="200"/>
 <img src="pics/pDOS.png" alt="pDOS" width="200"/>
 
-and also plot 2D/3D fermi surfaces
+and also plot 2D fermi surfaces
 <img src="pics/2D_band_plot.png" alt="2D_band_plot" width="200"/>
+and 3D fermi surfaces
 <img src="pics/3D_band_plot.png" alt="3D_band_plot" width="200"/>
 
 
