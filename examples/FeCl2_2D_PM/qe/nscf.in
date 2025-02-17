@@ -1,0 +1,25 @@
+ &control
+    calculation='nscf'
+    restart_mode='from_scratch',
+    pseudo_dir = './',
+    outdir='./'
+    prefix='FeCl2'
+	 verbosity='high'
+ /
+&system
+    ibrav = 4, nat= 3, ntyp= 2,
+	 A=3.47, C=20
+    ecutwfc =80.0, nspin = 1, nbnd= 28, ecutrho=500.0
+ /
+ &electrons
+    conv_thr = 1.0e-8
+ /
+ATOMIC_SPECIES
+ Fe 55.847 Fe.pbe-spn-kjpaw_psl.1.0.0.UPF
+ Cl 35.4527 Cl.pbe-n-kjpaw_psl.1.0.0.UPF
+ATOMIC_POSITIONS crystal
+ Fe   0.0000000     0.0000000     0.5000000
+ Cl   0.3333333     0.6666666     0.4290000
+ Cl   0.6666667     0.3333333     0.5710000
+K_POINTS (automatic)
+24 24 1 0 0 0

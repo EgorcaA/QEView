@@ -1,0 +1,25 @@
+ &control
+    calculation='scf'
+    restart_mode='from_scratch',
+    pseudo_dir = './',
+    outdir='./'
+    prefix='Fe2C'
+ /
+&system
+    ibrav = 4, nat= 3, ntyp= 2,
+	 A=2.84, C=20
+    ecutwfc =120.0, nspin = 1, nbnd= 30, ecutrho=800.0
+    occupations='smearing', smearing='cold', degauss=0.02
+ /
+ &electrons
+    conv_thr = 1.0e-8
+ /
+ATOMIC_SPECIES
+ Fe 55.847 Fe.pbe-spn-kjpaw_psl.0.2.1.UPF
+ C  12.011 C.pbe-n-kjpaw_psl.1.0.0.UPF
+ATOMIC_POSITIONS crystal
+ C    0.0000000     0.0000000     0.5000000
+ Fe   0.3333333     0.6666666     0.4500000
+ Fe   0.6666667     0.3333333     0.5500000
+K_POINTS (automatic)
+20 20 1 0 0 0

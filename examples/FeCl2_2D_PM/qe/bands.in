@@ -1,0 +1,6 @@
+ &bands
+    prefix  = 'FeCl2'
+    outdir = './'
+    filband = 'bands.dat'
+    lsym=.true.,
+ /

@@ -1,0 +1,6 @@
+&DOS
+prefix='FeCl2'
+outdir='./'
+bz_sum='tetrahedra'
+fildos='dos.dat'
+/
