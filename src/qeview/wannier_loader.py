@@ -16,6 +16,37 @@ Bohr2Ang = 1./Ang2Bohr
 
 
 class Wannier_loader(ABC):
+    '''
+    Wannier_loader is an abstract base class for loading and manipulating Wannier Hamiltonians.
+        directory (str): The directory where Wannier files are located.
+        name (str): The name of the Wannier file.
+        nwa (int): Number of Wannier functions.
+        nD (int): Dimensionality of the Hamiltonian (2D or 3D).
+        k_path_qe (np.ndarray): Array of k-point coordinates.
+        kpath_dists_qe (np.ndarray): Array of k-path distances in 2pi/alat.
+        complex_hr (np.ndarray): Array of complex Hamiltonian matrices.
+        hks_spins (np.ndarray): Array of Hamiltonians for each k-point.
+        kpoints_adj_serial (np.ndarray): dense k-points grid.
+    Methods:
+        __init__(dir, name):
+            Initialize the Wannier_loader with a directory and name.
+        load_kpath(path):
+        load_hr_pickle():
+            Load Hamiltonian data from a pickle file.
+        save_hk_pickle(name):
+            Save Hamiltonian data to a pickle file.
+        load_hk_pickle(name):
+            Load Hamiltonian data from a pickle file.
+        load_util(filename):
+        get_hk_eig_path(path, find_eigsQ=False, spin=0):
+        get_dense_hk_symmetric(nkpt=10, krange=1, find_eigsQ=False):
+            Generate a dense grid of k-points from -1 to 1 and compute the Hamiltonian for each k-point.
+        get_dense_hk(nkpt=10, find_eigsQ=False):
+        get_hk_spins(path, find_eigsQ=False):
+            Abstract method to get Hamiltonians and eigenvalues along the path for one/both spins.
+        get_wannier_BS(spin=0):
+
+    '''
     def __init__(self, dir, name):
         self.directory = dir # './'
         self.name = name # 'CrTe2'
@@ -24,6 +55,33 @@ class Wannier_loader(ABC):
     
 
     def load_kpath(self, path):
+        """
+        Load k-path data from a file.
+
+        Parameters:
+        path (str): The file path to the k-path data file.
+
+        The file should contain lines of space-separated values where:
+        - The second, third, and fourth values represent the k-point coordinates.
+        - The fifth value represents the k-path distance in 2pi/alat.
+
+        example:
+        G 0.00000000 0.00000000 0.00000000 0.00000000
+        . 0.00000000 0.10000000 0.00000000 0.11820789
+        . 0.00000000 0.20000000 0.00000000 0.23641577
+        . 0.00000000 0.30000000 0.00000000 0.35462366
+        . 0.00000000 0.40000000 0.00000000 0.47283155
+        M 0.00000000 0.50000000 0.00000000 0.59103943
+        . -0.11111111 0.55555556 0.00000000 0.70478502
+        ...
+
+        This method reads the file, extracts the k-point coordinates and k-path distances,
+        and stores them in the instance variables `self.k_path_qe` and `self.kpath_dists_qe`.
+
+        Instance Variables:
+        self.k_path_qe (np.ndarray): Array of k-point coordinates with shape (n, self.nD).
+        self.kpath_dists_qe (np.ndarray): Array of k-path distances.
+        """
         k_path = []
         kpath_dists = []
 
@@ -127,10 +185,6 @@ class Wannier_loader(ABC):
         """
         band_str = []
         hks_bs = []
-        # print(np.array(self.R_coords).shape)
-        # print(np.array(self.R_coords))
-        # print(self.complex_hr.shape)
-        # print(path)
         for k in tqdm(path):
             hk = np.sum( [np.exp(2*np.pi*1.j* np.dot(k, R) )*self.complex_hr[:, :, R_ind, spin] 
                           for R_ind, R in enumerate(self.R_coords)], axis=0 )
@@ -213,8 +267,7 @@ class Wannier_loader(ABC):
 class Wannier_loader_FM(Wannier_loader):
     """
     A class to handle loading and processing of Wannier90 data for ferromagnetic hamiltonians.
-    Methods
-    -------
+    
     """
 
     def __init__(self,  dir, name):
@@ -240,35 +293,13 @@ class Wannier_loader_FM(Wannier_loader):
             return bs_spins, hks_spins 
         return [], hks_spins 
 
-    # def get_hk_ham_path(self, path):
-    #     """
-    #     Calculate the Hamiltonian matrix for a given path in k-space.
-
-    #     Args:
-    #         path (list of array-like): A list of k-points in the path.
-
-    #     Returns:
-    #         np.ndarray: A 4D array of shape (nwa, nwa, nkpt, spin) representing the Hamiltonian matrices 
-    #                     for each k-point and spin. Here, 'nwa' is the number of Wannier functions, 
-    #                     'nkpt' is the number of k-points, and 'spin' is the spin index (0 or 1).
-    #     """
-    #     spins = [0, 1]
-    #     hks_spins = []
-    #     for spin in spins:
-    #         hks = []
-    #         for k in tqdm(path):
-    #             hk = np.sum( [np.exp(2*np.pi*1.j* np.dot(k, R) )*self.complex_hr[:, :, R_ind, spin] 
-    #                         for R_ind, R in enumerate(self.R_coords)], axis=0 )
-    #             hk = np.array(hk).T
-    #             hks.append(hk)
-    #         hks_spins.append(hks)
-    #     # hks_spins (spin, nkpt, nwa, nwa)
-    #     hks_spins = np.transpose( np.array(hks_spins) , (2,3, 1,0)) # (nwa, nwa, nkpt, spin)
-    #     return hks_spins
-    
-
     
 class Wannier_loader_PM(Wannier_loader):
+    """
+    A class to handle loading and processing of Wannier90 data for paramagnetic hamiltonians.
+    
+    """
+
     def __init__(self,  dir, name):
         super().__init__( dir, name) 
 
@@ -278,16 +309,12 @@ class Wannier_loader_PM(Wannier_loader):
         
         self.complex_hr = hr[:,:,:, np.newaxis] # (nwa, nwa, Rpts, spin=0)
         self.R_coords = R_coords[:, :self.nD]
-        # print(self.complex_hr.shape)
-        # with open(self.directory + '/wannier/hr_mn' + self.name +'.pickle', 'wb') as f:
-            # pickle.dump(self.complex_hr, f)
         
 
 
     def get_hk_spins(self, path, find_eigsQ=False):
         path = path[:, :self.nD]
         band_str, hk = self.get_hk_eig_path( path, find_eigsQ=find_eigsQ, spin=0)
-        # print(band_str_dn.shape, hks_dn.shape)
         hks_spins = np.transpose( hk , (2,1,0))[:,:,:, np.newaxis] # (nwa, nwa, nkpt, spin)
         if find_eigsQ:
             bs_spins = np.transpose( np.array([band_str]) , (2,1,0)) # (nwa, nkpt, spin)
