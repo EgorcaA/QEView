@@ -35,6 +35,24 @@ def printoptions(*args, **kwargs):
 class qe_analyse_base(ABC):
 
     def __init__(self, dir, name):
+        """
+        Initialize the QEBase object with the given directory and name.
+
+        Args:
+            dir (str): The directory path where the data 
+            (! and folders ./qe and optionaly ./wannier) is located.
+            name (str): The name of the material.
+
+        Attributes:
+            directory (str): Stores the directory path.
+            name (str): Stores the name of the material or dataset.
+
+        Methods:
+            get_full_DOS: Retrieves the full density of states (DOS) data and eF.
+            get_crystell_str: Retrieves the crystal structure data.
+            get_hr: Retrieves the Hamiltonian data (band structure).
+            get_sym_points: Retrieves the symmetry points data.
+        """
         self.directory = dir # './'
         self.name = name # 'CrTe2'
 
@@ -58,6 +76,22 @@ class qe_analyse_base(ABC):
         FOR NON SPIN POLARIZED DOS:
         - dos: A list of DOS values.
         '''
+        pass
+
+
+    @abstractmethod
+    def get_hr(self):
+        """
+        Retrieves and processes spin band structure data from specified files.
+
+        Attributes for FM:
+            hDFT_up (numpy.ndarray): Spin-up band structure data.
+            hDFT_dn (numpy.ndarray): Spin-down band structure data.
+            nbandsDFT (int): Number of bands in the DFT calculation.
+        Attributes for PM:
+            hDFT (numpy.ndarray): band structure data.
+            nbandsDFT (int): Number of bands in the DFT calculation.
+        """
         pass
 
 
@@ -288,6 +322,15 @@ class qe_analyse_base(ABC):
 
     @staticmethod
     def get_spin_BS(path):
+        """
+        Reads spin band structure data from a qe calculations file and returns it as a nested NumPy array.
+        Args:
+            path (str): The file path to read the spin band structure data from.
+        Returns:
+            np.ndarray: A nested NumPy array containing the spin band structure data. 
+                        Each sub-array represents a band 
+                        and contains the k-point coordinates and the energy.
+        """
         hr_fact_data = []
         with open(path) as f:
                 band = 0

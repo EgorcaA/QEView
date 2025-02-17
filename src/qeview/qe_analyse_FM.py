@@ -32,7 +32,39 @@ def printoptions(*args, **kwargs):
 
 
 class qe_analyse_FM(qe_analyse_base):
-
+    '''
+    Class for analyzing Quantum Espresso (QE) data with a focus on ferromagnetic (FM) systems.
+    This class inherits from `qe_analyse_base` and provides methods to read and analyze density of states (DOS),
+    projected density of states (pDOS), and band structure (BS) data from QE calculations. It also includes
+    methods to plot these data.
+    Methods:
+        __init__(self, dir, name):
+            Initializes the qe_analyse_FM instance with the specified directory and name.
+        get_full_DOS(self):
+            Raises IOError if the DOS file does not exist or cannot be opened.
+        get_hr(self):
+            Reads the spin-polarized band structure data from files and stores it in the instance variables.
+            If the files cannot be found or opened, an error message is printed.
+        plot_FullDOS(self, efrom=-5, eto=5, saveQ=False, picname='DOS'):
+            Plots the full density of states (DOS) for spin-up and spin-down electrons.
+            Optionally saves the plot to a file.
+        get_pDOS(self):
+            Reads the projected density of states (pDOS) data from files and stores it in the instance variables.
+        plot_pDOS(self, element="1", efrom=None, eto=None, yfrom=None, yto=None):
+            Plots the projected density of states (pDOS) for a specified element.
+            Optionally sets the energy and y-axis limits for the plot.
+        print_bands_range(self, band_from=None, band_to=None):
+            Prints the energy range of the specified bands for spin-up and spin-down electrons.
+        plot_BS(self, efrom=None, eto=None):
+            Plots the band structure (BS) for spin-up and spin-down electrons.
+            Optionally sets the energy limits for the plot.
+        load_wannier(self, kpath_filename='kpath_qe2.dat', wannier_hr=''):
+            Loads the Wannier90 data and k-path information for band structure calculations.
+        plot_wannier_BS(self, efrom=None, eto=None):
+            Plots the Wannier-interpolated band structure (BS) for spin-up and spin-down electrons.
+            Optionally sets the energy limits for the plot.
+    '''
+    
     def __init__(self, dir, name):
         super().__init__( dir, name)
 
@@ -79,6 +111,22 @@ class qe_analyse_FM(qe_analyse_base):
 
 
     def get_hr(self):
+        """
+        Retrieves and processes spin band structure data from specified files.
+
+        This method attempts to read spin band structure data from two files
+        ('bands1.dat.gnu' and 'bands2.dat.gnu') in the 'qe' subdirectory of the
+        specified directory. If an error occurs (e.g., files not found), it falls
+        back to reading from 'bands_up.dat.gnu' and 'bands_dn.dat.gnu'.
+
+        Attributes:
+            hDFT_up (numpy.ndarray): Spin-up band structure data.
+            hDFT_dn (numpy.ndarray): Spin-down band structure data.
+            nbandsDFT (int): Number of bands in the DFT calculation.
+
+        Raises:
+            Exception: If both sets of files are not found or cannot be read.
+        """
         try:
             self.hDFT_up = self.get_spin_BS(self.directory +'qe/bands1.dat.gnu')
             self.hDFT_dn = self.get_spin_BS(self.directory +'qe/bands2.dat.gnu')
@@ -89,7 +137,28 @@ class qe_analyse_FM(qe_analyse_base):
             self.nbandsDFT = self.hDFT_up.shape[0]
 
 
-    def plot_FullDOS(self, efrom=-5, eto=5, saveQ=False, picname='DOS'):
+    def plot_FullDOS(self, efrom=-5, eto=5, saveQ=False, picname='DOS.png'):
+        """
+        Plots the full Density of States (DOS) with spin polarization.
+        Parameters:
+        -----------
+        efrom : float, optional
+            The lower bound of the energy range to plot (default is -5).
+        eto : float, optional
+            The upper bound of the energy range to plot (default is 5).
+        saveQ : bool, optional
+            If True, the plot will be saved as an image file (default is False).
+        picname : str, optional
+            The name of the file to save the plot if saveQ is True (default is 'DOS').
+        
+        Notes:
+        ------
+        - The plot displays the spin-polarized Density of States (DOS).
+        - The x-axis represents the energy relative to the Fermi energy (E - E_f) in eV.
+        - The y-axis represents the density of states.
+        - A vertical dashed line is drawn at E - E_f = 0.
+        - The plot can be saved as an image file if saveQ is set to True.
+        """
         fig, dd = plt.subplots() 
         
         dd.plot(self.eDOS - self.efermi, self.dosup, 
@@ -131,13 +200,55 @@ class qe_analyse_FM(qe_analyse_base):
 
 
     def get_pDOS(self):
+        """
+        Reads projected density of states (pDOS) data from files and organizes it by spin and orbital type.
+        This method reads pDOS data from files in the specified directory, processes the data, and stores it in dictionaries
+        for spin-up and spin-down states, categorized by orbital type (s, p, d).
+        The method performs the following steps:
+        1. Defines a helper function `read_pdos` to read pDOS data from a file and sum the relevant columns.
+        2. Defines a helper function `list_pdos_files` to list all pDOS files in the specified directory that match the naming pattern.
+        3. Initializes dictionaries `pdos_up` and `pdos_dn` to store pDOS data for spin-up and spin-down states, respectively.
+        4. Iterates over the pDOS files, reads the data using `read_pdos`, and updates the dictionaries with the processed data.
+        Raises:
+            FileNotFoundError: If a file does not match the expected naming pattern.
+        Attributes:
+            pdos_up (dict): Dictionary to store spin-up pDOS data, categorized by orbital type.
+            pdos_dn (dict): Dictionary to store spin-down pDOS data, categorized by orbital type.
+            ePDOS (pd.Series): Energy values corresponding to the pDOS data.
+        """
         
         def read_pdos(file, i):
+            """
+            Reads projected density of states (PDOS) data from a specified file.
+
+            Args:
+                file (str): The name of the file containing the PDOS data.
+                i (int): The index of the column to be used for PDOS calculation.
+
+            Returns:
+                tuple: A tuple containing:
+                - e (pd.Series): The energy values.
+                - pdos (pd.Series): The summed PDOS values from the specified columns.
+            """
             df = pd.read_csv(self.directory +'qe/'+ str(file), sep='\s+', skiprows=[0], header=None)
             e, pdos = df.iloc[:, 0], df.iloc[:, [i,i+2]].sum(axis=1)
             return e, pdos
 
         def list_pdos_files(path):
+            """
+            Generator function that lists PDOS (Projected Density of States) files in the given directory.
+            Args:
+                path (str): The directory path where PDOS files are located.
+            Yields:
+                tuple: A tuple containing the filename and a tuple of matched groups from the regex pattern.
+                       The matched groups include:
+                       - Atom number (str)
+                       - Atom symbol (str)
+                       - Wavefunction number (str)
+                       - Wavefunction symbol (str)
+            Raises:
+                FileNotFoundError: If a file matching the pattern is not found.
+            """
             for f in os.listdir(path):
                 
                 if f.startswith( self.name + '.pdos_atm'):
@@ -160,6 +271,21 @@ class qe_analyse_FM(qe_analyse_base):
 
 
     def plot_pDOS(self, element="1", efrom=None, eto=None, yfrom=None, yto=None):
+        """
+        Plots the projected Density of States (pDOS) for a given element.
+        Parameters:
+        -----------
+        element : str, optional
+            The element for which the pDOS is to be plotted. Default is "1".
+        efrom : float, optional
+            The lower bound of the energy range for the plot. Default is -15.
+        eto : float, optional
+            The upper bound of the energy range for the plot. Default is 15.
+        yfrom : float, optional
+            The lower bound of the y-axis for the plot. Default is -10.
+        yto : float, optional
+            The upper bound of the y-axis for the plot. Default is -yfrom.
+        """
         if efrom is None:
             efrom = -15
         if eto is None:
@@ -168,11 +294,10 @@ class qe_analyse_FM(qe_analyse_base):
             yfrom = -10
         if yto is None:
             yto = -yfrom
-        # plt.figure(figsize= (40, 20))
-        fig, dd = plt.subplots()  # Create a figure containing a single axes.
+
+        fig, dd = plt.subplots()  
 
         ########################### UP spin
-        # print(self.pdos_up)
         atom_pdos = {"s": None, "p": None, "d": None}
         atom_tdos = np.zeros((len(self.pdos_up['s']['1'])))
         
@@ -186,7 +311,6 @@ class qe_analyse_FM(qe_analyse_base):
 
         dd.plot(self.ePDOS-self.efermi, atom_tdos, color='green', label='TDOS '+element, linewidth=0.8, linestyle='dashed') 
 
-        # for orbital_type in atom_pdos.keys():
         if atom_pdos['s'][0] is not None:
             dd.plot(atom_pdos.index, atom_pdos['s'], 
                     label="s DOS", color='c', linewidth=0.5)
@@ -220,7 +344,6 @@ class qe_analyse_FM(qe_analyse_base):
 
         dd.plot(self.ePDOS-self.efermi, -atom_tdos, color='green', label='TDOS '+element, linewidth=0.8, linestyle='dashed') 
         
-        # for orbital_type in atom_pdos.keys():
         if atom_pdos['s'][0] is not None:
             dd.plot(atom_pdos.index, -atom_pdos['s'], 
                     label="s DOS", color='c', linewidth=0.5)
@@ -236,7 +359,6 @@ class qe_analyse_FM(qe_analyse_base):
         plt.fill_between(
                 x= self.ePDOS-self.efermi, 
                 y1=-atom_tdos, 
-                # where= (-1 < t)&(t < 1),
                 color= "grey",
                 alpha= 0.1)
 
@@ -251,23 +373,26 @@ class qe_analyse_FM(qe_analyse_base):
         dd.legend()  # Add a legend.
         
         dd.vlines(0, ymin=0, ymax=30*1.2, colors='black', ls='--', alpha= 1.0, linewidth=1.0)
-        # fig.set_figwidth(12)     #  ширина и
-        # fig.set_figheight(6)    #  высота "Figure"
-        # dd.set_ylim((-10, 10))
-        # dd.set_xlim((-7, 3))
-        # plt.savefig(element+'_DOS.png', dpi=1000)
-        # plt.savefig('./pics/'+ element+'_DOS.png', dpi=200)
         width = 7
         fig.set_figwidth(width)     #  ширина и
         fig.set_figheight(width/1.6)    #  высота "Figure"
         dd.set_ylim((yfrom, yto))
         dd.set_xlim((efrom, eto))
+        # plt.savefig('./pics/'+ element+'_DOS.png', dpi=200)
         # plt.savefig('./2pub/pics/pDOS.png', dpi=200, bbox_inches='tight')
 
         plt.show()
 
 
     def print_bands_range(self, band_from=None, band_to=None):
+        """
+        This method prints the Fermi energy and the energy range for each band in the specified range. 
+        The energy range is printed both in absolute terms and relative to the Fermi energy.
+
+        Parameters:
+        band_from (int, optional): The starting band index (inclusive). Defaults to 0 if not provided.
+        band_to (int, optional): The ending band index (exclusive). Defaults to the total number of bands if not provided.
+        """
         if band_from is None:
             band_from = 0
         if band_to is None:
@@ -286,6 +411,23 @@ class qe_analyse_FM(qe_analyse_base):
 
 
     def plot_BS(self, efrom=None, eto=None):
+        """
+        Plots the band structure with spin-up and spin-down components.
+        Parameters:
+        -----------
+        efrom : float, optional
+            The lower limit of the energy range to plot. Default is -15.
+        eto : float, optional
+            The upper limit of the energy range to plot. Default is 15.
+        Notes:
+        ------
+        - The function uses matplotlib to create the plot.
+        - The x-axis represents the high symmetry points in the Brillouin zone.
+        - The y-axis represents the energy relative to the Fermi level (E - $E_f$).
+        - Spin-up bands are plotted in red and spin-down bands are plotted in blue.
+        - The function automatically adjusts the figure size and adds grid lines and labels.
+        - The Fermi level is indicated by a dashed horizontal line at y=0.
+        """
         if efrom is None:
             efrom = -15
         if eto is None:
@@ -295,7 +437,7 @@ class qe_analyse_FM(qe_analyse_base):
         
         label_ticks = self.HighSymPointsNames
         normal_ticks = self.HighSymPointsDists
-        # print(normal_ticks)
+        
         for band in range(self.nbandsDFT):
             if band == 0:
                 dd.plot(self.hDFT_up[band, : ,0], 
@@ -316,8 +458,6 @@ class qe_analyse_FM(qe_analyse_base):
 
 
         dd.set_ylabel(r'E - $E_f$ [Ev]')  # Add an x-label to the axes.
-        # dd.set_xlabel('rho')  # Add a y-label to the axes.
-        # dd.set_title("pk/p from density")
         dd.legend(prop={'size': 8}, loc='upper right', frameon=False)  # Add a legend.
         plt.xticks(normal_ticks, label_ticks)
         dd.yaxis.set_minor_locator(MultipleLocator(1))
@@ -336,6 +476,17 @@ class qe_analyse_FM(qe_analyse_base):
             
     # Wannier90 interface 
     def load_wannier(self, kpath_filename='kpath_qe2.dat', wannier_hr=''):
+        """
+        Load Wannier data and calculate band structures for spin up and spin down.
+
+        Parameters:
+        kpath_filename (str): The filename of the k-path data. Default is 'kpath_qe2.dat'.
+        wannier_hr (str): The filename of the Wannier Hamiltonian. Default is an empty string 
+        (files should be named hrup.dat and hrdn.dat in wannier folder).
+
+        Returns:
+        None
+        """
         self.wannier = Wannier_loader_FM(self.directory, '')
         self.wannier.load_kpath('./kpaths/'+ kpath_filename)
         self.BS_wannier_dn = self.wannier.get_wannier_BS(spin=1)
@@ -343,6 +494,18 @@ class qe_analyse_FM(qe_analyse_base):
 
 
     def plot_wannier_BS(self, efrom=None, eto=None):
+        """
+        Plots the Wannier band structure along with the DFT band structure.
+        
+        Parameters:
+        efrom (float, optional): The lower limit of the energy range to plot. Defaults to -15.
+        eto (float, optional): The upper limit of the energy range to plot. Defaults to 15.
+        
+        This function plots the band structure for both spin-up and spin-down states using data from
+        Wannier and DFT calculations. The plot includes labels for high symmetry points and a legend
+        indicating the spin direction. The Fermi level is set to zero on the y-axis.
+        The plot is displayed using matplotlib and can be saved by uncommenting the savefig line.
+        """
         if efrom is None:
             efrom = -15
         if eto is None:
@@ -392,8 +555,6 @@ class qe_analyse_FM(qe_analyse_base):
 
 
         dd.set_ylabel(r'E - $E_f$ [Ev]')  # Add an x-label to the axes.
-        # dd.set_xlabel('rho')  # Add a y-label to the axes.
-        # dd.set_title("pk/p from density")
         dd.legend(prop={'size': 8}, loc='upper right', frameon=False)  # Add a legend.
         plt.xticks(normal_ticks, label_ticks)
         dd.yaxis.set_minor_locator(MultipleLocator(1))
