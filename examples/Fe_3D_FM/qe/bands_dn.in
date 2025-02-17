@@ -1,7 +1,0 @@
- &bands
-    prefix  = 'Fe'
-    outdir = './'
-    filband = 'bands_dn.dat'
-    lsym=.true.,
-    spin_component=2
- /
