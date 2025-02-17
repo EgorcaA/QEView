@@ -1,0 +1,32 @@
+ &control
+    calculation='vc-relax'
+    restart_mode='from_scratch',
+    pseudo_dir = './',
+    outdir='./'
+    prefix='FeCl23D'
+ /
+&system
+    ibrav = 5, nat= 3, ntyp= 2,
+	 A=6.42277, cosAB=0.849279,
+    ecutwfc =100.0, nspin = 1, nbnd= 24, ecutrho=1080.0
+    occupations='smearing', smearing='cold', degauss=0.01
+ /
+ &electrons
+    conv_thr = 1.0e-8
+ /
+ &IONS
+ ion_dynamics='bfgs'
+ /
+&CELL
+cell_dynamics='bfgs'
+cell_dofree='ibrav'
+/
+ATOMIC_SPECIES
+ Fe 55.8470 Fe.pbe-spn-kjpaw_psl.1.0.0.UPF
+ Cl 35.4527 Cl.pbe-n-kjpaw_psl.1.0.0.UPF
+ATOMIC_POSITIONS crystal
+ Fe   0.0000000000000000  0.0000000000000000  0.0000000000000000
+ Cl   0.7421428700000000  0.7421428700000001  0.7421428700000001
+ Cl   0.2578571299999999  0.2578571299999999  0.2578571299999999
+K_POINTS (automatic)
+12 12 12 0 0 0
