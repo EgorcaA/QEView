@@ -157,6 +157,10 @@ class qe_analyse_base(ABC):
         with printoptions(precision=10, suppress=True):
             print(  np.array(self.pos[1])*Bohr2Ang @ LA.inv(acell) )
 
+        print('positions (AA)')
+        with printoptions(precision=10, suppress=True):
+            print(  np.array(self.pos[1])*Bohr2Ang )
+
 
     def get_sym_points(self):
         """
@@ -295,15 +299,15 @@ class qe_analyse_base(ABC):
                 
                 Letter_to_write = Letter_prev if point == 0 else (Letter_new if HSP_ind == NHSP-1 and point == num_points_between else '.')
                 
-                kpath_lines.append(f'{Letter_to_write} {k_to_write[0]:.0f} {k_to_write[1]:.0f} {k_to_write[2]:.0f} \t {dist :.8f}')
+                kpath_lines.append(f'{Letter_to_write} {k_to_write[0]:.0f} {k_to_write[1]:.0f} {k_to_write[2]:.0f} \t {dist :.8f} \n')
                 kpath_return.append(k_to_write)
                 kpath_draw_path_return.append(dist )
-                print(kpath_lines[-1])
+                # print(kpath_lines[-1])
                 dist += LA.norm(self.bcell.T @ delta_k / num_points_between)/ (2.*np.pi / self.alat)
             
             k_prev = k_new[:]
             Letter_prev = Letter_new
-        
+        print(''.join(kpath_lines))
         if saveQ:
             with open("./kpaths/" + filename, "w") as fout:
                 fout.writelines(kpath_lines)

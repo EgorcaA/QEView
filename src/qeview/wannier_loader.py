@@ -183,7 +183,7 @@ class Wannier_loader(ABC):
         band_str = []
         hks_bs = []
         for k in tqdm(path):
-            hk = np.sum( [np.exp(2*np.pi*1.j* np.dot(k, R) )*self.complex_hr[:, :, R_ind, spin] 
+            hk = np.sum( [np.exp(-2*np.pi*1.j* np.dot(k, R) )*self.complex_hr[:, :, R_ind, spin] 
                           for R_ind, R in enumerate(self.R_coords)], axis=0 )
             hks_bs.append(hk)
             if find_eigsQ:
