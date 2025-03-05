@@ -1,6 +1,6 @@
 <!-- ABOUT THE PROJECT -->
 
-## Overview
+# QEview  
 
 This tool is designed to streamline the analysis and visualization of results obtained from **Quantum Espresso** simulations, including:
 
@@ -10,23 +10,16 @@ This tool is designed to streamline the analysis and visualization of results ob
 
 By simplifying the interpretation of complex data, this package provides an efficient and user-friendly approach while remaining flexible for customization.
 
-# Supported Systems
+### Supported Systems
 The package supports:
 
-- **2D and 3D materials**
-- **Ferromagnetic (FM) and Paramagnetic (PM) configurations**
+- *2D and 3D materials*
+- *Ferromagnetic (FM) and Paramagnetic (PM) configurations*
 
-# Key Features
+### Key Features
 * *Visualization*: Generate clear and insightful visual representations of your simulation results.
 * *Predefined Visualization Methods*: A simple and intuitive interface for efficient workflow.
 * *Wannier90 Hamiltonian Loading*: Enables *band structure interpolation and plotting* for enhanced analysis.
-
-The package can proceed both 2D and 3D ferromagnetic(FM) and paramagnetic(PM) cases.
-
-Features:
-* *Visualization*: Generate clear and informative visualizations to better understand your simulation results.
-* *Ready-to-use visualization methods*: Simple and intuitive interface for efficient workflow.
-* Wannier90 hamiltonian loading for BS interpolation and plotting
 
 
 API documentation 
@@ -38,14 +31,13 @@ Explore the `user guide` to quickly get up to speed with the tool.
 
 ### Install
 
-* qeschema
   ```sh
   pip install qeview
   ```
 
 
 <!-- USAGE EXAMPLES -->
-## Usage
+### Usage
 
 Define you data document using:
 ```python
