@@ -14,8 +14,8 @@ sphinx:
   configuration: src/docs/source/conf.py
 
 
-formats:
-  - pdf
+# formats:
+#   - pdf
 
 python:
   install:
