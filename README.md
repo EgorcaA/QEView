@@ -10,19 +10,18 @@ Features:
 * *Ready-to-use visualization methods*: Simple and intuitive interface for efficient workflow.
 * Wannier90 hamiltonian loading for BS interpolation and plotting
 
-There are only 2 files to examine!!! and the idea is to modify them for your personal needs fast. 
-Use `examples` to get started.
+[API documentation](https://qeview.readthedocs.io/en/latest/)
+
+Explore the `user guide` to quickly get up to speed with the tool.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 
-### Prerequisites
+### Install
 
-* qeschema
   ```sh
-  pip install qeschema
+  pip install qeview
   ```
-* numpy, pickle, matplotlib, plotly, tqdm 
 
 <!-- USAGE EXAMPLES -->
 ## Usage
