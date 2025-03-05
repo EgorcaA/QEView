@@ -22,7 +22,7 @@ The package supports:
 * *Wannier90 Hamiltonian Loading*: Enables *band structure interpolation and plotting* for enhanced analysis.
 
 
-API documentation 
+[API documentation](https://qeview.readthedocs.io/en/latest/)
 
 Explore the `user guide` to quickly get up to speed with the tool.
 
