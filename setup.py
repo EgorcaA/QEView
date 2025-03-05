@@ -5,8 +5,8 @@ from setuptools import setup
 
 """
 :authors: EgorcaA
-:license: Apache License, Version 2.0, see LICENSE file
-:copyright: (c) 2021 Peopl3s
+:license: MIT License, see LICENSE file
+:copyright: (c) 2025 Egor M. Agapov
 """
 
 version = '1.0.2'
@@ -22,19 +22,19 @@ setup(
     author_email='agapov.em@phystech.edu',
 
     description=(
-        u'Python module for writing scripts for project management platform '
-        u'Club House (clubhouse.io API wrapper)'
+        u'Quantum Espresso Analysis and Visualization Tool '
     ),
     long_description=long_description,
     long_description_content_type='text/markdown',
 
-    url='https://github.com/Peopl3s/club_house_api',
-    download_url='https://github.com/Peopl3s/club-house-api/archive/main.zip'
+    url='https://github.com/EgorcaA/QEView',
+    download_url='https://github.com/EgorcaA/QEView/archive/main.zip',
 
-    license='Apache License, Version 2.0, see LICENSE file',
+    license='MIT License, see LICENSE file',
 
-    packages=['club_house_api'],
-    install_requires=['aiohttp', 'aiofiles'],
+    packages=['qeview'],
+    package_dir = {"": "src"},
+    install_requires=['qeschema', 'pickle', 'tqdm', 'matplotlib', 'numpy', 'warnings'],
 
     classifiers=[
         'License :: OSI Approved :: Apache Software License',
