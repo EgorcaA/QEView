@@ -34,7 +34,7 @@ setup(
 
     packages=['qeview'],
     package_dir = {"": "src"},
-    install_requires=['qeschema', 'pickle', 'tqdm', 'matplotlib', 'numpy', 'warnings'],
+    install_requires=['qeschema', 'tqdm', 'matplotlib', 'numpy'],
 
     classifiers=[
         'License :: OSI Approved :: Apache Software License',
