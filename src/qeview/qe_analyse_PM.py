@@ -233,7 +233,9 @@ class qe_analyse_PM(qe_analyse_base):
                 raise FileNotFoundError('No pdos files were found')
 
         self.pdos = {"s": dict(), "p": dict(), "d": dict()}
-        for file, info in list_pdos_files(self.directory + 'qe/'):
+
+        qqe_dir = os.path.join(self.directory, qe_dir)
+        for file, info in list_pdos_files(qqe_dir):
             print(file)
             atom_number,  _, _, orbital_type = info
             
@@ -281,7 +283,7 @@ class qe_analyse_PM(qe_analyse_base):
         ------
         Exception
             If `efermi` is not defined and `get_full_DOS` has not been run.
-        FileNotFoundError
+        Exception
             If no pDOS files are found for the specified element.
 
         """
@@ -302,10 +304,14 @@ class qe_analyse_PM(qe_analyse_base):
         atom_pdos = {"s": None, "p": None, "d": None}
         atom_tdos = np.zeros((len(self.pdos['s']['1'])))
         
+        found_element = False
         for orbital_type in atom_pdos.keys():
             if str(element) in self.pdos[orbital_type].keys():
                 atom_pdos[orbital_type] = self.pdos[orbital_type][str(element)]
                 atom_tdos += self.pdos[orbital_type][str(element)]
+                found_element = True
+        if not found_element:
+            raise Exception('No pdos files were found for this element')
 
         atom_pdos_index = self.ePDOS - self.efermi
 
@@ -523,7 +529,7 @@ class qe_analyse_PM(qe_analyse_base):
         None
 
         """
-        self.wannier = Wannier_loader_PM(self.directory, wannier_hr_name, wannier_dir)
+        self.wannier = Wannier_loader_PM(wannier_hr_name, wannier_dir)
         
         os.makedirs(os.path.abspath(kpaths_dir), exist_ok=True)
         kpath_file = os.path.join(os.path.abspath(kpaths_dir), kpath_filename)
@@ -605,9 +611,9 @@ class qe_analyse_PM(qe_analyse_base):
                 dd.plot(
                     self.wannier.kpath_dists_qe,
                     self.BS_wannier[ : , band] - self.efermi,
-                    color='black',
-                    linewidth=0.7,
-                    alpha=1.0,
+                    color='red',
+                    linewidth=3.0,
+                    alpha=0.3,
                     label='wannier' if band == 0 else None,
                 )
 

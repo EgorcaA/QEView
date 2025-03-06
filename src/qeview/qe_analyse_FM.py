@@ -250,8 +250,8 @@ class qe_analyse_FM(qe_analyse_base):
         self.pdos_up = {"s": dict(), "p": dict(), "d": dict()}
         self.pdos_dn = {"s": dict(), "p": dict(), "d": dict()}
         
-        qe_dir = os.path.join(self.directory, 'qe')
-        for file, info in list_pdos_files(qe_dir):
+        qqe_dir = os.path.join(self.directory, qe_dir)
+        for file, info in list_pdos_files(qqe_dir):
             print(file)
             atom_number,  _, _, orbital_type = info
             
@@ -303,7 +303,7 @@ class qe_analyse_FM(qe_analyse_base):
         ------
         Exception
             If `efermi` is not defined and `get_full_DOS` has not been run.
-        FileNotFoundError
+        Exception
             If no pDOS files are found for the specified element.
 
         """
@@ -332,7 +332,7 @@ class qe_analyse_FM(qe_analyse_base):
                 atom_tdos += self.pdos_up[orbital_type][str(element)]
                 found_element = True
         if not found_element:
-            raise FileNotFoundError('No pdos files were found for this element')
+            raise Exception('No pdos files were found for this element')
 
         atom_pdos_index = self.ePDOS - efermi
 
