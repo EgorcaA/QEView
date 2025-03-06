@@ -1,4 +1,4 @@
-qeview.qe\_analyse\_PM
+﻿qeview.qe\_analyse\_PM
 ======================
 
 .. currentmodule:: qeview
@@ -14,9 +14,9 @@ qeview.qe\_analyse\_PM
    .. autosummary::
    
       ~qe_analyse_PM.__init__
-      ~qe_analyse_PM.get_crystell_str
+      ~qe_analyse_PM.get_band_structure
+      ~qe_analyse_PM.get_crystall_struct
       ~qe_analyse_PM.get_full_DOS
-      ~qe_analyse_PM.get_hr
       ~qe_analyse_PM.get_integer_kpath
       ~qe_analyse_PM.get_pDOS
       ~qe_analyse_PM.get_qe_kpathBS

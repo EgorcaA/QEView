@@ -10,6 +10,16 @@ QEView documentation
 Quantum Espresso Analysis and Visualization Tool
 ===========================
 
+.. sidebar:: QEView 1.0.6
+
+   This is the homepage QEView Version 1.0.6
+
+      .. image:: _static/GitHub-logo.png
+         :width: 75%
+         :align: center
+         :target: https://github.com/EgorcaA/QEView
+
+
 Overview
 --------
 This tool is designed to streamline the analysis and visualization of results obtained from **Quantum Espresso** simulations, including:

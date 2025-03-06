@@ -9,7 +9,7 @@ from setuptools import setup
 :copyright: (c) 2025 Egor M. Agapov
 """
 
-version = '1.0.5'
+version = '1.0.6'
 
 with open('pypi_intro.md', encoding='utf-8') as f:
     long_description = f.read()

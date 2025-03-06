@@ -1,43 +1,45 @@
 qeview package
 ==============
 
+Submodules
+----------
+
 qeview.qe\_analyse\_FM module
 -----------------------------
 
 .. automodule:: qeview.qe_analyse_FM
    :members:
-   :show-inheritance:
    :undoc-members:
+   :show-inheritance:
 
 qeview.qe\_analyse\_PM module
 -----------------------------
 
 .. automodule:: qeview.qe_analyse_PM
    :members:
-   :show-inheritance:
    :undoc-members:
+   :show-inheritance:
 
 qeview.qe\_base module
 ----------------------
 
 .. automodule:: qeview.qe_base
    :members:
+   :undoc-members:
    :show-inheritance:
-   :undoc-members: 
-   :exclude-members: printoptions
 
 qeview.wannier\_loader module
 -----------------------------
 
 .. automodule:: qeview.wannier_loader
    :members:
-   :show-inheritance:
    :undoc-members:
+   :show-inheritance:
 
 Module contents
 ---------------
 
 .. automodule:: qeview
    :members:
-   :show-inheritance:
    :undoc-members:
+   :show-inheritance:

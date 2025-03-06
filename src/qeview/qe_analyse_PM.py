@@ -15,17 +15,6 @@ from .wannier_loader import Wannier_loader_PM
 Ang2Bohr = 1.8897259886
 Bohr2Ang = 1./Ang2Bohr
 
-import contextlib
-
-@contextlib.contextmanager
-def printoptions(*args, **kwargs):
-    original = np.get_printoptions()
-    np.set_printoptions(*args, **kwargs)
-    try:
-        yield
-    finally: 
-        np.set_printoptions(**original)
-
 
 
 class qe_analyse_PM(qe_analyse_base):
@@ -34,83 +23,53 @@ class qe_analyse_PM(qe_analyse_base):
     This class inherits from `qe_analyse_base` and provides methods to read and analyze density of states (DOS),
     projected density of states (pDOS), and band structure (BS) data from QE calculations. It also includes
     methods to plot these data.
-
-    Methods:
-        __init__(dir, name):
-            Initializes the qe_analyse_PM instance with the specified directory and name.
-        get_full_DOS():
-            - dos: A list of DOS values.
-            If the file is successfully read, the energy values and DOS values are stored in the respective
-            instance variables as numpy arrays. The Fermi energy level is also extracted from the file.
-        get_hr():
-            Reads the spin band structure data from a file and stores it in the instance variables.
-            - hDFT: The spin band structure data.
-            - nbandsDFT: The number of bands in the DFT calculation.
-        plot_FullDOS(efrom=-5, eto=5, saveQ=False, picname='DOS.png'):
-            Plots the full density of states (DOS) with respect to the Fermi energy level.
-            Parameters:
-                efrom (float): The lower energy bound for the plot.
-                eto (float): The upper energy bound for the plot.
-                saveQ (bool): Whether to save the plot as an image file.
-                picname (str): The name of the image file to save the plot.
-        get_pDOS():
-            Reads the projected density of states (pDOS) data from files and stores it in the instance variables.
-            - pdos: A dictionary containing the pDOS data for different orbitals (s, p, d).
-            - ePDOS: A list of energy values for the pDOS.
-        plot_pDOS(element="1", efrom=None, eto=None, yto=None):
-            Plots the projected density of states (pDOS) for a specified element with respect to the Fermi energy level.
-            Parameters:
-                element (str): The element number to plot the pDOS for.
-                efrom (float): The lower energy bound for the plot.
-                eto (float): The upper energy bound for the plot.
-                yto (float): The upper bound for the y-axis.
-        print_bands_range(band_from=None, band_to=None):
-            Prints the energy range for each band in the specified range.
-            Parameters:
-                band_from (int): The starting band number.
-                band_to (int): The ending band number.
-        plot_BS(efrom=None, eto=None):
-            Plots the band structure with respect to the Fermi energy level.
-            Parameters:
-                efrom (float): The lower energy bound for the plot.
-                eto (float): The upper energy bound for the plot.
-        load_wannier(kpath_filename='kpath_qe2.dat', wannier_hr='wannier90_hr.dat'):
-            Loads the Wannier90 data and k-path information for band structure plotting.
-            Parameters:
-                kpath_filename (str): The filename of the k-path data.
-                wannier_hr (str): The filename of the Wannier90 Hamiltonian data.
-        plot_wannier_BS(efrom=None, eto=None):
-            Plots the Wannier-interpolated band structure with respect to the Fermi energy level.
-            Parameters:
-                efrom (float): The lower energy bound for the plot.
-                eto (float): The upper energy bound for the plot.
     '''
     def __init__(self, dir, name):
         super().__init__( dir, name)
+        self.efermi = None
 
-
-    def get_full_DOS(self):
-        """
-        Reads the density of states (DOS) data from a file and stores it in the instance variables.
-        This method initializes the following instance variables:
-        - eDOS: A list of energy values.
-        - dosup: A list of DOS values for spin-up electrons.
-        - dosdn: A list of DOS values for spin-down electrons.
-        - efermi: The Fermi energy level.
-        The method attempts to read the DOS data from a file located at `self.directory + "qe/dos.dat"`.
-        If the file is successfully read, the energy values, spin-up DOS values, and spin-down DOS values
-        are stored in the respective instance variables as numpy arrays. The Fermi energy level is also
-        extracted from the file.
-        If the file cannot be found or opened, an error message is printed.
-        Raises:
-            IOError: If the DOS file does not exist or cannot be opened.
-        """
+        self.eDOS = None
+        self.dos = None
         
+        self.ePDOS = None
+        self.pdos = None
+        
+        self.nbandsDFT = None
+        self.BS_wannier = None
+        
+
+    def get_full_DOS(self, filename='dos.dat', qe_dir='qe'):
+        """
+        Reads the Density of States (DOS) from a file and stores it in the instance variables:
+            - eDOS: A list of energy values.
+            - dos: A list of DOS values for spin-down electrons.
+            - efermi: The Fermi energy level.
+
+        Parameters
+        ----------
+        filename : str, optional
+            The name of the DOS file (default is 'dos.dat').
+        qe_dir : str, optional
+            The directory where the QE data is located (default is 'qe').
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        FileNotFoundError
+            If the DOS file is not found.
+        IOError
+            If there is an error reading the DOS file.
+        
+        """
         self.eDOS = []
         self.dos = []
         self.efermi = 0
         try:
-            with open(self.directory + "qe/dos.dat") as f:
+            file_path = os.path.join(self.directory, qe_dir, filename)
+            with open(file_path) as f:
                 line = f.readline()
                 self.efermi = float(re.search(r"EFermi =\s*(-?\d+\.\d*)\s*eV", line).group(1))
                 for line in f:
@@ -119,45 +78,60 @@ class qe_analyse_PM(qe_analyse_base):
                     energy, edos, *_ = line.split()
                     self.eDOS.append(float(energy))
                     self.dos.append(float(edos))
-        except IOError:
-            print("Error: DOS file does not appear to exist.")
+        except FileNotFoundError as e:
+            raise FileNotFoundError(f"The DOS file '{file_path}' was not found: {e}") from e
+        except IOError as e:
+            raise IOError(f"Failed to read DOS from file '{file_path}': {e}") from e
+        
+        
         print(f'efermi {self.efermi:.2f}')
         self.eDOS = np.array(self.eDOS)
         self.dos = np.array(self.dos)
 
 
 
-    def get_hr(self):
+    def plot_FullDOS(self, efrom=-5, eto=5, yto=10, 
+                     saveQ=False, picname='DOS.png', title='DOS', width=7,  height=7/1.6,
+                     qe_dir='qe'):
         """
-        Retrieves and processes the spin band structure data from a specified file.
-        """
-        self.hDFT = self.get_spin_BS(self.directory +'qe/bands.dat.gnu')
-        self.nbandsDFT = self.hDFT.shape[0]
+        Plots the Density of States (DOS) for a given energy range.
 
-
-
-    def plot_FullDOS(self, efrom=-5, eto=5, saveQ=False, picname='DOS.png'):
-        """
-        Plots the Density of States (DOS) graph.
-        Parameters:
-        -----------
+        Parameters
+        ----------
         efrom : float, optional
-            The starting energy value for the x-axis (default is -5).
+            The starting energy value for the plot (default is -5).
         eto : float, optional
-            The ending energy value for the x-axis (default is 5).
+            The ending energy value for the plot (default is 5).
+        yto : float, optional
+            The maximum absolute value for the y-axis (default is 10).
         saveQ : bool, optional
             If True, the plot will be saved as an image file (default is False).
         picname : str, optional
-            The name of the file to save the plot if saveQ is True (default is 'DOS.png').
-        
-        Notes:
-        ------
-        - The plot displays the non-spin-polarized Density of States (DOS).
+            The name of the image file to save the plot (default is 'DOS.png').
+        title : str, optional
+            The title of the plot (default is 'DOS').
+        width : float, optional
+            The width of the plot (default is 7).
+        height : float, optional
+            The height of the plot (default is 7/1.6).
+        qe_dir : str, optional
+            The directory where Quantum Espresso files are located (default is 'qe').
+
+        Returns
+        -------
+        None
+
+        Notes
+        -----
+        - If the DOS data is not initialized, the method will call `get_full_DOS` to initialize it.
         - The x-axis represents the energy relative to the Fermi energy (E - E_f) in eV.
-        - The y-axis represents the density of states.
-        - A vertical dashed line is drawn at E - E_f = 0.
-        - The plot can be saved as an image file if saveQ is set to True.
+        - The y-axis represents the density of states in arbitrary units.
         """
+          
+        if self.eDOS is None or self.dosup is None or self.dosdn is None:
+            print('Energies and DOS were not initialized. I run get_full_DOS')
+            self.get_full_DOS(filename='dos.dat', qe_dir=qe_dir)
+        
         fig, dd = plt.subplots() 
         
         dd.plot(self.eDOS - self.efermi, self.dos, color='red', linewidth=0.5)
@@ -177,83 +151,151 @@ class qe_analyse_PM(qe_analyse_base):
 
         dd.set_ylabel('Density of states')  # Add an x-label to the axes.
         dd.set_xlabel(r'$E-E_f$ [eV]')  # Add a y-label to the axes.
-        dd.set_title("Nonspinpolarized DOS")
+        dd.set_title(title)
         
-        dd.vlines(0, ymin=0, ymax=30*1.2, colors='black', ls='--', alpha= 1.0, linewidth=1.0)        
-        width = 7
+        min_lim = np.min(self.eDOS - self.efermi)
+        max_lim = np.max(self.eDOS - self.efermi)
+        dd.hlines(0, xmin=min_lim*1.1, xmax=max_lim*1.1, colors='black', ls='-', alpha= 1.0, linewidth=1.0)
+
         fig.set_figwidth(width)     #  ширина и
-        fig.set_figheight(width/1.6)    #  высота "Figure"
-        dd.set_ylim((0, 10))
+        fig.set_figheight(height)    #  высота "Figure"
+        dd.set_ylim((0, yto))
         dd.set_xlim((efrom, eto))
         
         if saveQ:
-            plt.savefig('./'+ picname, dpi=200, bbox_inches='tight')
+            pic_path = os.path.join(self.directory, picname)
+            plt.savefig(pic_path, dpi=200, bbox_inches='tight')
+
         plt.show()
 
 
-    def get_pDOS(self):
+    def get_pDOS(self, qe_dir='qe'):
         """
-        Reads projected density of states (pDOS) data from files and organizes it by spin and orbital type.
-        This method reads pDOS data from files in the specified directory, processes the data, and stores it in dictionaries,
+        Reads projected density of states (pDOS) data from files and organizes it by orbital type.
+        This method reads pDOS data from files in the specified directory, processes the data, and stores it 
         categorized by orbital type (s, p, d).
-        The method performs the following steps:
-        1. Defines a helper function `read_pdos` to read pDOS data from a file and sum the relevant columns.
-        2. Defines a helper function `list_pdos_files` to list all pDOS files in the specified directory that match the naming pattern.
-        3. Initializes dictionary `pdos` to store pDOS data for spin-up and spin-down states, respectively.
-        4. Iterates over the pDOS files, reads the data using `read_pdos`, and updates the dictionaries with the processed data.
-        Raises:
-            FileNotFoundError: If a file does not match the expected naming pattern.
-        Attributes:
-            pdos_up (dict): Dictionary to store spin-up pDOS data, categorized by orbital type.
-            pdos_dn (dict): Dictionary to store spin-down pDOS data, categorized by orbital type.
-            ePDOS (pd.Series): Energy values corresponding to the pDOS data.
-        """
         
-        def read_pdos(file, i):
-            df = pd.read_csv(self.directory +'qe/'+ str(file), sep='\s+', skiprows=[0], header=None)
-            e, pdos = df.iloc[:, 0], df.iloc[:, [i,i+1]].sum(axis=1)
+        Parameters
+        ----------
+        qe_dir : str, optional
+            The directory where the QE data is located (default is 'qe').
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        FileNotFoundError
+            If the pDOS file is not found.
+        IOError
+            If there is an error reading the pDOS file.
+        """
+        def read_pdos(file, qe_dir='qe'):
+            
+            file_path = os.path.join(self.directory, qe_dir, str(file))
+            data = np.loadtxt(file_path, skiprows=1)
+
+            # Extract energy column (first column)
+            e = data[:, 0]
+
+            # Sum the selected PDOS columns
+            pdos = data[:, 1] + data[:, 2]
+
             return e, pdos
 
         def list_pdos_files(path):
+            """
+            Generator function that lists PDOS (Projected Density of States) files in the given directory.
+            Args:
+                path (str): The directory path where PDOS files are located.
+            Yields:
+                tuple: A tuple containing the filename and a tuple of matched groups from the regex pattern.
+                       The matched groups include:
+                       - Atom number (str)
+                       - Atom symbol (str)
+                       - Wavefunction number (str)
+                       - Wavefunction symbol (str)
+            Raises:
+                FileNotFoundError: If a file matching the pattern is not found.
+            """
+            found = False  # Flag to track if any matching file is found
             for f in os.listdir(path):
                 
                 if f.startswith( self.name + '.pdos_atm'):
                     match = re.search(
                         r"pdos_atm#(\d+)\((\w+)\)\_wfc#(\d+)\((\w+)\)", f)
-                    if not match:
-                        raise FileNotFoundError
-                    yield f, match.groups()
+                    if match:
+                        found = True  # Set flag to True if a match is found
+                        yield f, match.groups()
+                    
+            if not found:
+                raise FileNotFoundError('No pdos files were found')
 
         self.pdos = {"s": dict(), "p": dict(), "d": dict()}
         for file, info in list_pdos_files(self.directory + 'qe/'):
+            print(file)
             atom_number,  _, _, orbital_type = info
             
-            self.ePDOS, pdos = read_pdos(file, 1)#spinup
+            self.ePDOS, pdos = read_pdos(file, qe_dir)
             self.pdos[orbital_type].update({atom_number: pdos})
 
 
 
 
-    def plot_pDOS(self, element="1", efrom=None, eto=None, yto=None):
+    def plot_pDOS(self, element="1", efermi=None, efrom=-15, eto=15, yto=10,
+                  saveQ=False, picname='pDOS.png', title='pDOS', width=7, height=7/1.6, qe_dir='qe'):
         """
-        Plots the projected Density of States (pDOS) for a given element.
-        Parameters:
-        -----------
+        Plots the projected Density of States (pDOS) for a given element and energy range.
+
+        Parameters
+        ----------
         element : str, optional
-            The element for which the pDOS is to be plotted. Default is "1".
+            The element number to plot the pDOS for (default is "1").
+        efermi : float, optional
+            The Fermi energy level (default is None).
         efrom : float, optional
-            The lower bound of the energy range to plot. Default is -15.
+            The starting energy value for the plot (default is -15).
         eto : float, optional
-            The upper bound of the energy range to plot. Default is 15.
+            The ending energy value for the plot (default is 15).
         yto : float, optional
-            The upper bound of the y-axis (Density of States) range to plot. Default is 10.
+            The ending y-axis value for the plot (default is 10).
+        saveQ : bool, optional
+            If True, the plot will be saved to a file (default is False).
+        picname : str, optional
+            The name of the file to save the plot (default is 'pDOS.png').
+        title : str, optional
+            The title of the plot (default is 'pDOS').
+        width : float, optional
+            The width of the plot (default is 7).
+        height : float, optional
+            The height of the plot (default is 7/1.6).
+        qe_dir : str, optional
+            The directory where the QE data is located (default is 'qe').
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        Exception
+            If `efermi` is not defined and `get_full_DOS` has not been run.
+        FileNotFoundError
+            If no pDOS files are found for the specified element.
+
         """
-        if efrom is None:
-            efrom = -15
-        if eto is None:
-            eto =15
-        if yto is None:
-            yto = 10
+
+        if self.ePDOS is None or self.pdos is None:
+            print('Energies and pDOS were not initialized. I run get_pDOS')
+            self.get_pDOS(qe_dir)
+        if efermi is None:
+            if self.efermi is not None:
+                efermi = self.efermi
+            else:
+                raise Exception('efermi is not defined. Run get_full_DOS(filename=dos.dat)')
+        if title == 'pDOS':
+            title = element +" pDOS"
 
         fig, dd = plt.subplots()  
 
@@ -265,28 +307,20 @@ class qe_analyse_PM(qe_analyse_base):
                 atom_pdos[orbital_type] = self.pdos[orbital_type][str(element)]
                 atom_tdos += self.pdos[orbital_type][str(element)]
 
-        atom_pdos = pd.DataFrame(atom_pdos)
-        atom_pdos.index = self.ePDOS -self.efermi
+        atom_pdos_index = self.ePDOS - self.efermi
 
-        dd.plot(self.ePDOS-self.efermi, atom_tdos, color='green', label='TDOS '+element, linewidth=0.8, linestyle='dashed') 
+        dd.plot(atom_pdos_index, atom_tdos, color='green', label='TDOS ' + element, linewidth=0.8, linestyle='dashed')
 
-        if atom_pdos['s'][0] is not None:
-            dd.plot(atom_pdos.index, atom_pdos['s'], 
-                    label="s DOS", color='c', linewidth=0.5)
+        if atom_pdos['s'] is not None:
+            dd.plot(atom_pdos_index, atom_pdos['s'], label="s DOS", color='c', linewidth=0.5)
 
-        if atom_pdos['p'][0] is not None:
-            dd.plot(atom_pdos.index, atom_pdos['p'], 
-                    label="p DOS", color='red', linewidth=0.5)
+        if atom_pdos['p'] is not None:
+            dd.plot(atom_pdos_index, atom_pdos['p'], label="p DOS", color='red', linewidth=0.5)
 
-        if atom_pdos['d'][0] is not None:
-            dd.plot(atom_pdos.index, atom_pdos['d'], 
-                    label="d DOS", color='blue', linewidth=0.5)
-        plt.fill_between(
-                x= self.ePDOS-self.efermi, 
-                y1=atom_tdos, 
-                color= "grey",
-                alpha= 0.1)
+        if atom_pdos['d'] is not None:
+            dd.plot(atom_pdos_index, atom_pdos['d'], label="d DOS", color='blue', linewidth=0.5)
 
+        plt.fill_between(atom_pdos_index, atom_tdos, color="grey", alpha=0.1)
 
         locator = AutoMinorLocator()
         dd.yaxis.set_minor_locator(locator)
@@ -294,30 +328,79 @@ class qe_analyse_PM(qe_analyse_base):
 
         dd.set_ylabel('Density of states')
         dd.set_xlabel(r'$E-E_f$ [eV]')  
-        dd.set_title(element +" pDOS")
+        dd.set_title(title)
         dd.legend()  
         
         dd.vlines(0, ymin=0, ymax=30*1.2, colors='black', ls='--', alpha= 1.0, linewidth=1.0)
-        width = 7
+        
         fig.set_figwidth(width)     
-        fig.set_figheight(width/1.6)
+        fig.set_figheight(height)
         dd.set_ylim((0, yto))
         dd.set_xlim((efrom, eto))
-        # plt.savefig('./pics/'+ element+'_DOS.png', dpi=200)
-        # plt.savefig('./2pub/pics/pDOS.png', dpi=200, bbox_inches='tight')
+
+        if saveQ:
+            pic_path = os.path.join(self.directory, element+'_'+picname)
+            plt.savefig(pic_path, dpi=200, bbox_inches='tight')
 
         plt.show()
 
+    def get_band_structure(self, bands_filename='bands.dat.gnu', qe_dir='qe'):
+        """
+        Reads and processes the band structure data from a specified file.
 
-    def print_bands_range(self, band_from=None, band_to=None):
+        Parameters
+        ----------
+        bands_filename : str
+            The name of the file containing the band structure data. Default is 'bands.dat.gnu'.
+        qe_dir : str
+            The directory where the Quantum Espresso output files are located. Default is 'qe'.
+
+        Returns
+        -------
+        None
+            This method updates the instance variables `hDFT` and `nbandsDFT` 
+            with the band structure data and the number of bands, respectively.
+        """
+        
+        file_path = os.path.join(self.directory, qe_dir, bands_filename)
+        
+        self.hDFT = self.get_spin_BS(file_path)
+        self.nbandsDFT = self.hDFT.shape[0]
+
+
+    def print_bands_range(self, band_from=None, band_to=None, efermi=None):
         """
         This method prints the Fermi energy and the energy range for each band in the specified range. 
         The energy range is printed both in absolute terms and relative to the Fermi energy.
 
-        Parameters:
-        band_from (int, optional): The starting band index (inclusive). Defaults to None, which is interpreted as 0.
-        band_to (int, optional): The ending band index (exclusive). Defaults to None, which is interpreted as the total number of bands.
+        Parameters
+        ----------
+        band_from : int, optional
+            The starting band index (inclusive) (defaults to 0).
+        band_to : int, optional
+            The ending band index (exclusive) (defaults to the total number of bands if not provided).
+        efermi : float, optional
+                The Fermi energy level (default is None).
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        Exception
+            If no bands were parsed.
+        Exception
+            If efermi is not defined in class and not provided.
+        
         """
+        if self.nbandsDFT is None:
+            raise Exception('No bands were parsed. Run get_band_structure()')
+        if efermi is None:
+            if self.efermi is not None:
+                efermi = self.efermi
+            else:
+                raise Exception('efermi is not defined. Run get_full_DOS(filename=dos.dat)')
+
         if band_from is None:
             band_from = 0
         if band_to is None:
@@ -331,47 +414,72 @@ class qe_analyse_PM(qe_analyse_base):
 
 
 
-    def plot_BS(self, efrom=None, eto=None):
+    def plot_BS(self, efrom=-15, eto=15, efermi=None,
+                saveQ=False, picname='BS.png', title='BS', width=7, height=7/1.6):
         """
-        Plots the band structure (BS) of the material.
-        Parameters:
+        Plots the band structure (BS) of the material with spin-up and spin-down components.
+
+        Parameters
         -----------
         efrom : float, optional
-            The lower bound of the energy range to plot. Default is -15.
+            The lower energy limit for the plot. Default is -15.
         eto : float, optional
-            The upper bound of the energy range to plot. Default is 15.
-        Returns:
-        --------
-        None
-            This function does not return any value. It generates a plot of the band structure.
-        Notes:
+            The upper energy limit for the plot. Default is 15.
+        efermi : float, optional
+            The Fermi energy level. If not provided, it will use self.efermi.
+        saveQ : bool, optional
+            If True, the plot will be saved as an image file. Default is False.
+        picname : str, optional
+            The name of the image file to save the plot. Default is 'BS.png'.
+        title : str, optional
+            The title of the plot. Default is 'BS'.
+        width : float, optional
+            The width of the plot in inches. Default is 7.
+        height : float, optional
+            The height of the plot in inches. Default is 7/1.6.
+
+        Raises
+        -------
+        Exception
+            If no bands were parsed, or if high symmetry points were not parsed, or if efermi is not defined.
+        
+        Notes
         ------
-        - The x-axis represents the high symmetry points in the Brillouin zone.
-        - The y-axis represents the energy relative to the Fermi level (E - $E_f$).
-        - The plot includes a horizontal dashed line at y=0 to indicate the Fermi level.
-        - The plot is displayed using `plt.show()`.
+        - Ensure that `get_band_structure()` and `get_sym_points()` are run before calling this method.
+        - Ensure that `get_full_DOS(filename=dos.dat)` is run if efermi is not provided.
+
         """
-        if efrom is None:
-            efrom = -15
-        if eto is None:
-            eto =15
+        if self.nbandsDFT is None:
+            raise Exception('No bands were parsed. Run get_band_structure()')
+        if self.HighSymPointsNames is None:
+            raise Exception('High Symmetry Points were not parsed from band.in file. Run get_sym_points()')
+        if efermi is None:
+            if self.efermi is not None:
+                efermi = self.efermi
+            else:
+                raise Exception('efermi is not defined. Run get_full_DOS(filename=dos.dat)')
+
         
         fig, dd = plt.subplots() 
         
         label_ticks = self.HighSymPointsNames
         normal_ticks = self.HighSymPointsDists
-        # print(normal_ticks)
-        for band in range(self.nbandsDFT):
-            if band == 0:
-                dd.plot(self.hDFT[band, : ,0], 
-                        self.hDFT[band, : , 1] - self.efermi, label='up', color='black', linewidth=0.7,
-                            alpha=1.0)
+        assert len(normal_ticks) > 1, "not enough High Sym Points"
+        assert len(normal_ticks) == len(label_ticks), "Length of High Sym Points distanclistes and labels lists should be the same"
 
-            else:
-                dd.plot(self.hDFT[band, : ,0], 
-                        self.hDFT[band, : , 1] - self.efermi,  color='black', linewidth=0.7,
-                        alpha=1.0)
+        if self.nbandsDFT is not None:
+            for band in range(self.nbandsDFT):
+                assert len(self.hDFT[band, :, 0]) == len(self.hDFT[band, :, 1]), \
+                    f'len of qe kpath {self.hDFT[band, :, 0]} is not equal to calculated BS {self.hDFT[band, :, 1]}'
 
+                dd.plot(
+                    self.hDFT[band, :, 0],
+                    self.hDFT[band, :, 1] - efermi,
+                    color='black',
+                    linewidth=0.7,
+                    alpha=1.0,
+                )
+                
 
         dd.set_ylabel(r'E - $E_f$ [Ev]')  
         dd.legend(prop={'size': 8}, loc='upper right', frameon=False) 
@@ -381,80 +489,127 @@ class qe_analyse_PM(qe_analyse_base):
         dd.axhline(y=0, ls='--', color='k')
         plt.xlim(normal_ticks[0], normal_ticks[-1])
         plt.ylim(efrom, eto)
+        dd.set_title(title)
 
-        width = 7
         fig.set_figwidth(width)     
-        fig.set_figheight(width/1.6)
-        #plt.savefig('./2pub/pics/BS.png', dpi=200, bbox_inches='tight')
+        fig.set_figheight(height)
+
+        if saveQ:
+            pic_path = os.path.join(self.directory, picname)
+            plt.savefig(pic_path, dpi=200, bbox_inches='tight')
 
         plt.show()
 
          
     # Wannier90 interface 
-    def load_wannier(self, kpath_filename='kpath_qe2.dat', wannier_hr='wannier90_hr.dat'):
+    def load_wannier(self, kpath_filename, kpaths_dir='kpaths',
+                     wannier_hr_name='wannier90_hr.dat', wannier_dir='wannier'):
         """
-        Load Wannier data and k-path for band structure analysis.
+        Load Wannier data and k-path information.
 
-        Parameters:
-        kpath_filename (str): The filename of the k-path data. Default is 'kpath_qe2.dat'.
-        wannier_hr (str): The filename of the Wannier Hamiltonian data. 
-        Default is 'wannier90_hr.dat' and it should be in wannier folder
-
-        Returns:
+        Parameters
+        -----------
+        kpath_filename : str
+            The filename of the k-path file to be loaded.
+        kpaths_dir : str, optional
+            The directory where the k-path files are located. Default is 'kpaths'.
+        wannier_hr_name : str, optional
+            The filename of the Wannier Hamiltonian for the spin-up component. Default is .'wannier90_hr.dat'
+        wannier_dir : str, optional
+            The directory where the Wannier files are located. Default is 'wannier'.
+        
+        Returns
+        --------
         None
+
         """
-        self.wannier = Wannier_loader_PM(self.directory, wannier_hr)
-        self.wannier.load_kpath('./kpaths/'+ kpath_filename)
+        self.wannier = Wannier_loader_PM(self.directory, wannier_hr_name, wannier_dir)
+        
+        os.makedirs(os.path.abspath(kpaths_dir), exist_ok=True)
+        kpath_file = os.path.join(os.path.abspath(kpaths_dir), kpath_filename)
+
+        self.wannier.load_kpath(kpath_file)
         self.BS_wannier = self.wannier.get_wannier_BS(spin=0)
 
 
-    def plot_wannier_BS(self, efrom=None, eto=None):
+    def plot_wannier_BS(self, efrom=-15, eto=15,
+                        saveQ=False, picname='BS_wannier.png', title='BS Wannier', 
+                        width=7, height=7/1.6):
         """
-        Plots the Wannier band structure along with the DFT band structure.
-        
-        Parameters:
-        efrom (float, optional): The lower limit of the energy range to plot. Defaults to -15.
-        eto (float, optional): The upper limit of the energy range to plot. Defaults to 15.
-        
-        This function plots the band structure using data from Wannier and DFT calculations. 
-        The plot includes labels for high symmetry points and a legend
-        indicating the spin direction. The Fermi level is set to zero on the y-axis.
-        The plot is displayed using matplotlib and can be saved by uncommenting the savefig line.
+        Plots the Wannier band structure.
+
+        Parameters
+        ----------
+        efrom : float, optional
+            The lower energy limit for the plot (default is -15).
+        eto : float, optional
+            The upper energy limit for the plot (default is 15).
+        saveQ : bool, optional
+            If True, the plot will be saved to a file (default is False).
+        picname : str, optional
+            The name of the file to save the plot (default is 'BS_wannier.png').
+        title : str, optional
+            The title of the plot (default is 'BS Wannier').
+        width : float, optional
+            The width of the plot in inches (default is 7).
+        height : float, optional
+            The height of the plot in inches (default is 7/1.6).
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        Exception
+            If no bands were parsed from QE or Wannier.
+            If `efermi` is not defined.
+            If High Symmetry Points were not parsed from band.in file.
         """
-
-        if efrom is None:
-            efrom = -15
-        if eto is None:
-            eto =15
-
-        nwa = self.BS_wannier.shape[1]
-
+        if self.BS_wannier is None and self.nbandsDFT is None:
+            raise Exception('No bands were parsed from qe or wannier.')
+        if self.efermi is None:
+            raise Exception('efermi is not defined. Run get_full_DOS(filename=dos.dat)')
+        if self.HighSymPointsNames is None:
+            raise Exception('High Symmetry Points were not parsed from band.in file. Run get_sym_points()')
+        
         label_ticks = self.HighSymPointsNames
         normal_ticks = self.HighSymPointsDists
+        assert len(normal_ticks) > 1, "not enough High Sym Points"
+        assert len(normal_ticks) == len(label_ticks), "Length of High Sym Points distanclistes and labels lists should be the same"
 
         fig, dd = plt.subplots()  # Create a figure containing a single axes.
-        for band in range(self.nbandsDFT):
-            if band == 0:
-                dd.plot(self.hDFT[band, : ,0], 
-                        self.hDFT[band, : , 1] - self.efermi, label='DFT', color='black', linewidth=0.7,
-                            alpha=1.0)
-
-            else:
-                dd.plot(self.hDFT[band, : ,0], 
-                        self.hDFT[band, : , 1] - self.efermi,  color='black', linewidth=0.7,
-                        alpha=1.0)
-
-
-        for band in range(nwa):
-            if band == 0:
-                
-                dd.plot(self.wannier.kpath_dists_qe,
-                        self.BS_wannier[ : , band] - self.efermi , label='wannier', color='r', alpha=0.5, linewidth=3)
         
-            else:
-                
-                dd.plot(self.wannier.kpath_dists_qe,
-                        self.BS_wannier[ : , band] - self.efermi , color='r', alpha=0.3, linewidth=3)
+        if self.nbandsDFT is not None:
+            for band in range(self.nbandsDFT):
+                assert len(self.hDFT[band, :, 0]) == len(self.hDFT[band, :, 1]), \
+                    f'len of qe kpath {self.hDFT[band, :, 0]} is not equal to calculated BS {self.hDFT[band, :, 1]}'
+
+                dd.plot(
+                    self.hDFT[band, :, 0],
+                    self.hDFT[band, :, 1] - self.efermi,
+                    color='black',
+                    linewidth=0.7,
+                    alpha=1.0,
+                    label='qe' if band == 0 else None,
+                )
+
+        nwa = self.BS_wannier.shape[1]
+        assert nwa > 0, "no wannier bands"
+
+        if self.BS_wannier is not None:
+            for band in range(nwa):
+                assert len(self.wannier.kpath_dists_qe) == len(self.BS_wannier[ : , band]), \
+                    f'len of qe kpath {self.wannier.kpath_dists_qe} is not equal to calculated BS {self.BS_wannier[ : , band]}'
+
+                dd.plot(
+                    self.wannier.kpath_dists_qe,
+                    self.BS_wannier[ : , band] - self.efermi,
+                    color='black',
+                    linewidth=0.7,
+                    alpha=1.0,
+                    label='wannier' if band == 0 else None,
+                )
 
 
         dd.set_ylabel(r'E - $E_f$ [Ev]')  
@@ -466,9 +621,13 @@ class qe_analyse_PM(qe_analyse_base):
         plt.xlim(normal_ticks[0], normal_ticks[-1])
         plt.ylim(efrom, eto)
 
-        width = 7
-        fig.set_figwidth(width)     
-        fig.set_figheight(width/1.6)
-        # plt.savefig('./2pub/pics/BS_wannier.png', dpi=200, bbox_inches='tight')
+        dd.set_title(title)
+
+        fig.set_figwidth(width)    
+        fig.set_figheight(height)  
+
+        if saveQ:
+            pic_path = os.path.join(self.directory, picname)
+            plt.savefig(pic_path, dpi=200, bbox_inches='tight')
 
         plt.show()

@@ -12,4 +12,5 @@ Documentation
    :maxdepth: 4
 
    qeview
+   qerun_dict
 

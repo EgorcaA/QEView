@@ -1,0 +1,221 @@
+root
+└── qes:espresso
+    ├── @Units
+    ├── @xmlns:qes
+    ├── @xmlns:xsi
+    ├── @xsi:schemaLocation
+    ├── closed
+    │   ├── @DATE
+    │   └── @TIME
+    ├── exit_status
+    ├── general_info
+    │   ├── created
+    │   │   ├── $
+    │   │   ├── @DATE
+    │   │   └── @TIME
+    │   ├── creator
+    │   │   ├── $
+    │   │   ├── @NAME
+    │   │   └── @VERSION
+    │   ├── job
+    │   └── xml_format
+    │       ├── $
+    │       ├── @NAME
+    │       └── @VERSION
+    ├── input
+    │   ├── atomic_species
+    │   │   ├── @ntyp
+    │   │   └── species
+    │   ├── atomic_structure
+    │   │   ├── @alat
+    │   │   ├── @bravais_index
+    │   │   ├── @nat
+    │   │   ├── atomic_positions
+    │   │   │   └── atom
+    │   │   └── cell
+    │   │       ├── a1
+    │   │       ├── a2
+    │   │       └── a3
+    │   ├── bands
+    │   │   ├── nbnd
+    │   │   ├── occupations
+    │   │   └── tot_charge
+    │   ├── basis
+    │   │   ├── ecutrho
+    │   │   ├── ecutwfc
+    │   │   └── gamma_only
+    │   ├── cell_control
+    │   │   ├── cell_do_free
+    │   │   ├── cell_dynamics
+    │   │   ├── pressure
+    │   │   └── wmass
+    │   ├── control_variables
+    │   │   ├── calculation
+    │   │   ├── disk_io
+    │   │   ├── etot_conv_thr
+    │   │   ├── fcp
+    │   │   ├── forc_conv_thr
+    │   │   ├── forces
+    │   │   ├── max_seconds
+    │   │   ├── nstep
+    │   │   ├── outdir
+    │   │   ├── prefix
+    │   │   ├── press_conv_thr
+    │   │   ├── print_every
+    │   │   ├── pseudo_dir
+    │   │   ├── restart_mode
+    │   │   ├── rism
+    │   │   ├── stress
+    │   │   ├── title
+    │   │   ├── verbosity
+    │   │   └── wf_collect
+    │   ├── dft
+    │   │   └── functional
+    │   ├── electron_control
+    │   │   ├── conv_thr
+    │   │   ├── diago_cg_maxiter
+    │   │   ├── diago_full_acc
+    │   │   ├── diago_gs_nblock
+    │   │   ├── diago_ppcg_maxiter
+    │   │   ├── diago_rmm_conv
+    │   │   ├── diago_rmm_ndim
+    │   │   ├── diago_thr_init
+    │   │   ├── diagonalization
+    │   │   ├── exx_nstep
+    │   │   ├── max_nstep
+    │   │   ├── mixing_beta
+    │   │   ├── mixing_mode
+    │   │   ├── mixing_ndim
+    │   │   ├── real_space_beta
+    │   │   ├── real_space_q
+    │   │   ├── tbeta_smoothing
+    │   │   └── tq_smoothing
+    │   ├── ion_control
+    │   │   ├── ion_dynamics
+    │   │   ├── refold_pos
+    │   │   ├── remove_rigid_rot
+    │   │   └── upscale
+    │   ├── k_points_IBZ
+    │   │   └── monkhorst_pack
+    │   │       ├── $
+    │   │       ├── @k1
+    │   │       ├── @k2
+    │   │       ├── @k3
+    │   │       ├── @nk1
+    │   │       ├── @nk2
+    │   │       └── @nk3
+    │   ├── spin
+    │   │   ├── lsda
+    │   │   ├── noncolin
+    │   │   └── spinorbit
+    │   └── symmetry_flags
+    │       ├── force_symmorphic
+    │       ├── no_t_rev
+    │       ├── noinv
+    │       ├── nosym
+    │       ├── nosym_evc
+    │       └── use_all_frac
+    ├── output
+    │   ├── algorithmic_info
+    │   │   ├── paw
+    │   │   ├── real_space_beta
+    │   │   ├── real_space_q
+    │   │   └── uspp
+    │   ├── atomic_species
+    │   │   ├── @ntyp
+    │   │   ├── @pseudo_dir
+    │   │   └── species
+    │   ├── atomic_structure
+    │   │   ├── @alat
+    │   │   ├── @bravais_index
+    │   │   ├── @nat
+    │   │   ├── atomic_positions
+    │   │   │   └── atom
+    │   │   └── cell
+    │   │       ├── a1
+    │   │       ├── a2
+    │   │       └── a3
+    │   ├── band_structure
+    │   │   ├── fermi_energy
+    │   │   ├── ks_energies
+    │   │   ├── lsda
+    │   │   ├── nbnd_dw
+    │   │   ├── nbnd_up
+    │   │   ├── nelec
+    │   │   ├── nks
+    │   │   ├── noncolin
+    │   │   ├── num_of_atomic_wfc
+    │   │   ├── occupations_kind
+    │   │   ├── spinorbit
+    │   │   ├── starting_k_points
+    │   │   │   └── monkhorst_pack
+    │   │   │       ├── $
+    │   │   │       ├── @k1
+    │   │   │       ├── @k2
+    │   │   │       ├── @k3
+    │   │   │       ├── @nk1
+    │   │   │       ├── @nk2
+    │   │   │       └── @nk3
+    │   │   └── wf_collected
+    │   ├── basis_set
+    │   │   ├── ecutrho
+    │   │   ├── ecutwfc
+    │   │   ├── fft_box
+    │   │   │   ├── @nr1
+    │   │   │   ├── @nr2
+    │   │   │   └── @nr3
+    │   │   ├── fft_grid
+    │   │   │   ├── @nr1
+    │   │   │   ├── @nr2
+    │   │   │   └── @nr3
+    │   │   ├── fft_smooth
+    │   │   │   ├── @nr1
+    │   │   │   ├── @nr2
+    │   │   │   └── @nr3
+    │   │   ├── gamma_only
+    │   │   ├── ngm
+    │   │   ├── ngms
+    │   │   ├── npwx
+    │   │   └── reciprocal_lattice
+    │   │       ├── b1
+    │   │       ├── b2
+    │   │       └── b3
+    │   ├── convergence_info
+    │   │   └── scf_conv
+    │   │       ├── convergence_achieved
+    │   │       ├── n_scf_steps
+    │   │       └── scf_error
+    │   ├── dft
+    │   │   └── functional
+    │   ├── magnetization
+    │   │   ├── absolute
+    │   │   ├── lsda
+    │   │   ├── noncolin
+    │   │   ├── spinorbit
+    │   │   └── total
+    │   ├── symmetries
+    │   │   ├── nrot
+    │   │   ├── nsym
+    │   │   ├── space_group
+    │   │   └── symmetry
+    │   └── total_energy
+    │       ├── eband
+    │       ├── ehart
+    │       ├── etot
+    │       ├── etxc
+    │       ├── ewald
+    │       └── vtxc
+    ├── parallel_info
+    │   ├── nbgrp
+    │   ├── ndiag
+    │   ├── npool
+    │   ├── nprocs
+    │   ├── ntasks
+    │   └── nthreads
+    └── timing_info
+        ├── partial
+        └── total
+            ├── @label
+            ├── cpu
+            └── wall
+
